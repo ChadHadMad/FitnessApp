@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    x:Class="FitnessApp.Pages.HealthDashboardPage"
+    Title="Health Dashboard"
+    BackgroundColor="{DynamicResource PageBackgroundColor}">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="24" Spacing="20">
+
+            <Label Text="Your Health Overview"
+                   FontSize="28"
+                   FontAttributes="Bold"
+                   HorizontalOptions="Center" />
+            
+            <Label Text="Weight" FontAttributes="Bold" FontSize="20" />
+            <ProgressBar x:Name="WeightProgressBar" Progress="0" HeightRequest="20"/>
+            <Label x:Name="WeightLabel" Text="-- kg" FontSize="18" />
+
+            
+            <Label Text="Height" FontAttributes="Bold" FontSize="20" />
+            <Label x:Name="HeightLabel" Text="-- cm" FontSize="18" />
+
+           
+            <Label Text="BMI" FontAttributes="Bold" FontSize="20" />
+            <ProgressBar x:Name="BMIProgressBar" Progress="0" HeightRequest="20"/>
+            <Label x:Name="BMILabel" Text="--" FontSize="18" />
+
+          
+            <Label Text="Daily Calorie Goal" FontAttributes="Bold" FontSize="20" />
+            <Label x:Name="CaloriesLabel" Text="-- kcal" FontSize="18" />
+
+           
+            <Label Text="Protein Requirement" FontAttributes="Bold" FontSize="20" />
+            <Label x:Name="ProteinLabel" Text="-- g" FontSize="18" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

@@ -1,0 +1,11 @@
+﻿using FitnessApp.Pages;
+using Foundation;
+
+namespace FitnessApp
+{
+    [Register("AppDelegate")]
+    public class AppDelegate : MauiUIApplicationDelegate
+    {
+        protected override MauiApp CreateMauiApp() => MauiProgram.CreateMauiApp();
+    }
+}

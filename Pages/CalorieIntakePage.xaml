@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage 
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    x:Class="FitnessApp.Pages.CalorieIntakePage"
+    Title="Food Log"
+    BackgroundColor="{DynamicResource PageBackgroundColor}">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="24" Spacing="20">
+
+            <Label Text="Log Your Meals"
+                   FontSize="28"
+                   FontAttributes="Bold"
+                   HorizontalOptions="Center" />
+
+            
+            <SearchBar x:Name="FoodSearchBar"
+                       Placeholder="Search food..."
+                       TextChanged="OnFoodSearchChanged" />
+
+            
+            <CollectionView x:Name="FoodListView"
+                            SelectionMode="Single"
+                            SelectionChanged="OnFoodSelected"
+                            HeightRequest="200">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <StackLayout Padding="10">
+                            <Label Text="{Binding Name}" FontAttributes="Bold" />
+                            <Label Text="{Binding Calories, StringFormat='{0} kcal'}" FontSize="Small" />
+                        </StackLayout>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+           
+            <Entry x:Name="CustomFoodName" Placeholder="Custom food name" />
+            <Entry x:Name="CustomFoodCalories" Placeholder="Calories per serving" Keyboard="Numeric" />
+            <Button Text="Add Food to Database" Clicked="OnAddCustomFoodClicked" />
+
+         
+            <Label Text="Foods Eaten Today:" FontAttributes="Bold" FontSize="18" />
+            <CollectionView x:Name="EatenListView"
+                            HeightRequest="150">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <StackLayout Padding="10">
+                            <Label Text="{Binding Name}" />
+                            <Label Text="{Binding Calories, StringFormat='{0:F1} kcal'}" FontSize="Small" />
+                        </StackLayout>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+            <Label x:Name="DailyGoalLabel"
+                Text="Daily Goal: -- kcal"
+                 FontAttributes="Bold"
+                 FontSize="20"
+                 HorizontalOptions="Center"
+                 TextColor="DarkGreen" />
+           
+            <Label x:Name="CaloriesLabel"
+                   Text="Calories Consumed: 0 kcal"
+                   FontAttributes="Bold"
+                   FontSize="20"
+                   HorizontalOptions="Center" />
+
+            <Label x:Name="RemainingCaloriesLabel"
+                   Text="Remaining: --"
+                   FontAttributes="Bold"
+                   FontSize="20"
+                   HorizontalOptions="Center" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

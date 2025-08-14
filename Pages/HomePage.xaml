@@ -1,0 +1,50 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage 
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    x:Class="FitnessApp.Pages.HomePage"
+    Title="Home"
+    BackgroundColor="{DynamicResource PageBackgroundColor}">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="24" Spacing="24">
+
+            <Label 
+                Text="Welcome to FitnessApp!" 
+                FontSize="32"
+                FontAttributes="Bold"
+                HorizontalOptions="Center" />
+            <!--
+            <Border 
+                Stroke="{DynamicResource PrimaryColor}"
+                StrokeThickness="1"
+                BackgroundColor="{DynamicResource SecondaryColor}"
+                Padding="20"
+                StrokeShape="RoundRectangle 20">
+
+                <VerticalStackLayout Spacing="10">
+                    <Label 
+                        Text="Today's Workout Summary" 
+                        FontSize="20"
+                        FontAttributes="Bold"
+                        TextColor="White"/>
+
+                    <Label 
+                        x:Name="WorkoutSummaryLabel" 
+                        Text="No workouts logged yet."
+                        TextColor="White"/>
+                </VerticalStackLayout>
+            </Border>
+            -->
+            <Button 
+                Text="Start a new profile"
+                Clicked="OnLogWorkoutClicked"
+                BackgroundColor="{DynamicResource PrimaryColor}"
+                TextColor="White"
+                FontSize="18"
+                CornerRadius="12"
+                HeightRequest="50" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

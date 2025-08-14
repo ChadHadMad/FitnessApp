@@ -1,0 +1,57 @@
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:local="clr-namespace:FitnessApp.Pages"
+             x:Class="FitnessApp.Pages.WorkoutPage"
+             Title="Workout Log">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="20">
+
+            <Label Text="Log Your Workouts"
+                   FontSize="28"
+                   FontAttributes="Bold"
+                   HorizontalOptions="Center" />
+
+            <SearchBar x:Name="WorkoutSearchBar"
+                       Placeholder="Search workouts..."
+                       TextChanged="OnWorkoutSearchChanged" />
+            
+            <CollectionView x:Name="WorkoutListView"
+                            SelectionMode="Single"
+                            SelectionChanged="OnWorkoutSelected"
+                            HeightRequest="200">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <StackLayout Padding="10">
+                            <Label Text="{Binding Name}" FontAttributes="Bold" />
+                            <Label Text="{Binding CaloriesBurned, StringFormat='{0} kcal'}" FontSize="Small" />
+                        </StackLayout>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <Entry x:Name="CustomWorkoutName" Placeholder="Custom workout name" />
+            <Entry x:Name="CustomWorkoutCalories" Placeholder="Calories burned" Keyboard="Numeric" />
+            <Button Text="Add Workout" Clicked="OnAddCustomWorkoutClicked" />
+
+            <Label Text="Workouts Today:" FontAttributes="Bold" FontSize="18" />
+            <CollectionView x:Name="LoggedWorkoutsListView" HeightRequest="150">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <StackLayout Padding="10">
+                            <Label Text="{Binding Name}" />
+                            <Label Text="{Binding CaloriesBurned, StringFormat='{0} kcal'}" FontSize="Small" />
+                        </StackLayout>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <Label x:Name="CaloriesBurnedLabel"
+                   Text="Calories Burned: 0 kcal"
+                   FontAttributes="Bold"
+                   FontSize="20"
+                   HorizontalOptions="Center" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>
