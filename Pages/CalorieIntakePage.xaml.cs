@@ -11,41 +11,52 @@ namespace FitnessApp.Pages
 
         private double dailyCalorieNeed;
         private double caloriesConsumed;
+        private double proteinConsumed;
+
+        private FoodItem? selectedFood;
 
         public CalorieIntakePage()
         {
             InitializeComponent();
-            LoadProfileData();
-            LoadFoodList();
+            
+
         }
-        protected override void OnAppearing()
+
+        protected override async void OnAppearing()
         {
             base.OnAppearing();
-            LoadProfileData();
+            await FoodDatabase.InitializeAsync();
+            LoadFoodList();
+            await LoadProfileData();
+
+            var todayLog = await FoodLogService.GetTodayAsync();
+            eatenFoods = todayLog.Foods;
+
+            caloriesConsumed = todayLog.Calories;
+            proteinConsumed = todayLog.Protein;
+
+            EatenListView.ItemsSource = null;
+            EatenListView.ItemsSource = eatenFoods;
+            await DailyGoalService.UpsertTodayGoalFromProfileAsync();
+
+            UpdateRemainingCalories();
         }
 
-        private void LoadProfileData()
+        private async Task LoadProfileData()
         {
-            string gender = Preferences.Get("Gender", "");
-            double heightCm = Preferences.Get("HeightCm", 0.0);
-            double weightKg = Preferences.Get("WeightKg", 0.0);
-            double targetWeightKg = Preferences.Get("TargetWeightKg", 0.0);
-            int age = Preferences.Get("Age", 0);
-            string activityLevel = Preferences.Get("ActivityLevel", "");
+            var profile = await UserProfileService.LoadProfileAsync();
 
-            if (string.IsNullOrEmpty(gender) || heightCm <= 0 || weightKg <= 0 || age <= 0)
+            if (profile == null || profile.HeightCm <= 0 || profile.WeightKg <= 0 || profile.Age <= 0)
             {
                 RemainingCaloriesLabel.Text = "Please complete your profile first.";
                 return;
             }
 
-  
-            double bmr = (gender == "Male")
-                ? 10 * targetWeightKg + 6.25 * heightCm - 5 * age + 5
-                : 10 * targetWeightKg + 6.25 * heightCm - 5 * age - 161;
+            double bmr = (profile.Gender == "Male")
+                ? 10 * profile.TargetWeightKg + 6.25 * profile.HeightCm - 5 * profile.Age + 5
+                : 10 * profile.TargetWeightKg + 6.25 * profile.HeightCm - 5 * profile.Age - 161;
 
-         
-            double multiplier = activityLevel switch
+            double multiplier = profile.ActivityLevel switch
             {
                 "Sedentary" => 1.2,
                 "Lightly Active" => 1.375,
@@ -57,14 +68,14 @@ namespace FitnessApp.Pages
 
             dailyCalorieNeed = bmr * multiplier;
 
-           
-            if (targetWeightKg > 0 && Math.Abs(targetWeightKg - weightKg) >= 1)
+            if (profile.TargetWeightKg > 0 && Math.Abs(profile.TargetWeightKg - profile.WeightKg) >= 1)
             {
-                if (targetWeightKg > weightKg)
-                    dailyCalorieNeed += 500; 
-                else if (targetWeightKg < weightKg)
-                    dailyCalorieNeed -= 500; 
+                if (profile.TargetWeightKg > profile.WeightKg)
+                    dailyCalorieNeed += 500;
+                else if (profile.TargetWeightKg < profile.WeightKg)
+                    dailyCalorieNeed -= 500;
             }
+
             string storedDate = Preferences.Get("CaloriesBurnedDate", "");
             if (storedDate != DateTime.Today.ToString("yyyy-MM-dd"))
             {
@@ -86,12 +97,7 @@ namespace FitnessApp.Pages
 
         private void OnFoodSearchChanged(object sender, TextChangedEventArgs e)
         {
-            string query = "";
-            if (e.NewTextValue != null)
-            {
-                query = e.NewTextValue.ToLower();
-            }
-
+            string query = e.NewTextValue?.ToLower() ?? "";
             filteredFoods = FoodDatabase.Foods
                 .Where(f => f.Name.ToLower().Contains(query))
                 .ToList();
@@ -100,46 +106,169 @@ namespace FitnessApp.Pages
 
         private void OnFoodSelected(object sender, SelectionChangedEventArgs e)
         {
-            if (e.CurrentSelection.FirstOrDefault() is FoodItem selectedFood)
-            {
-                eatenFoods.Add(selectedFood);
-               
-                caloriesConsumed += selectedFood.Calories;
+            selectedFood = e.CurrentSelection.FirstOrDefault() as FoodItem;
+        }
+        private async void OnAddFoodClicked(object sender, EventArgs e)
+        {
+            var query = FoodSearchBar.Text ?? "";
+            var results = FoodDatabase.SearchFoods(query);
 
-                if (EatenListView != null)
+            if (results.Any())
+            {
+                var baseItem = results.First();
+                var eaten = new FoodItem
                 {
+                    Name = baseItem.Name,
+                    CaloriesPer100g = baseItem.CaloriesPer100g,
+                    ProteinPer100g = baseItem.ProteinPer100g,
+                    GramsConsumed = 100
+                };
+
+                eatenFoods.Add(eaten);
+                caloriesConsumed += eaten.TotalCalories;
+                proteinConsumed += eaten.TotalProtein;
+
+                EatenListView.ItemsSource = null;
+                EatenListView.ItemsSource = eatenFoods;
+
+                UpdateRemainingCalories();
+                await SaveTodayLogAsync(); 
+
+                await DisplayAlert("Added", $"{eaten.Name} - {eaten.TotalCalories:F0} kcal", "OK");
+            }
+            else
+            {
+                await DisplayAlert("Not Found", "Food not in database", "OK");
+            }
+        }
+        private async void OnAddFoodToLogClicked(object sender, EventArgs e)
+        {
+
+            if (selectedFood == null)
+            {
+                await DisplayAlert("Error", "Please select a food first.", "OK");
+                return;
+            }
+
+            if (!double.TryParse(GramsEntry.Text, out double grams) || grams <= 0)
+            {
+                await DisplayAlert("Error", "Enter grams consumed.", "OK");
+                return;
+            }
+
+            var eaten = new FoodItem
+            {
+                Name = selectedFood.Name,
+                CaloriesPer100g = selectedFood.CaloriesPer100g,
+                ProteinPer100g = selectedFood.ProteinPer100g,
+                GramsConsumed = grams
+            };
+
+            eatenFoods.Add(eaten);
+            caloriesConsumed += eaten.TotalCalories;
+            proteinConsumed += eaten.TotalProtein;
+            EatenListView.ItemsSource = null;
+            EatenListView.ItemsSource = eatenFoods;
+
+            UpdateRemainingCalories();
+            await SaveTodayLogAsync();
+        }
+        private async void OnDeleteFoodClicked(object sender, EventArgs e)
+        {
+            if (sender is SwipeItem swipeItem && swipeItem.BindingContext is FoodItem foodToRemove)
+            {
+                eatenFoods.Remove(foodToRemove);
+
+                caloriesConsumed -= foodToRemove.TotalCalories;
+                proteinConsumed -= foodToRemove.TotalProtein;
+
+                EatenListView.ItemsSource = null;
+                EatenListView.ItemsSource = eatenFoods;
+                UpdateRemainingCalories();
+                await SaveTodayLogAsync();
+            }
+        }
+
+        private async void OnEditFoodClicked(object sender, EventArgs e)
+        {
+            if (sender is SwipeItem swipeItem && swipeItem.BindingContext is FoodItem foodToEdit)
+            {
+                string result = await DisplayPromptAsync(
+                    "Edit Food",
+                    $"Enter new grams for {foodToEdit.Name}:",
+                    initialValue: foodToEdit.GramsConsumed.ToString(),
+                    keyboard: Keyboard.Numeric);
+
+                if (double.TryParse(result, out double newGrams) && newGrams > 0)
+                {
+                    caloriesConsumed -= foodToEdit.TotalCalories;
+                    proteinConsumed -= foodToEdit.TotalProtein;
+
+                    foodToEdit.GramsConsumed = newGrams;
+
+                    caloriesConsumed += foodToEdit.TotalCalories;
+                    proteinConsumed += foodToEdit.TotalProtein;
+
                     EatenListView.ItemsSource = null;
                     EatenListView.ItemsSource = eatenFoods;
+
+                    UpdateRemainingCalories();
+                    await SaveTodayLogAsync();
                 }
-                UpdateRemainingCalories();
+                else
+                {
+                    await DisplayAlert("Error", "Invalid number of grams entered.", "OK");
+                }
             }
         }
 
         private async void OnAddCustomFoodClicked(object sender, EventArgs e)
         {
             if (string.IsNullOrWhiteSpace(CustomFoodName.Text) ||
-                !double.TryParse(CustomFoodCalories.Text, out double calories))
+                !double.TryParse(CustomFoodCalories.Text, out double kcal) ||
+                !double.TryParse(CustomFoodProtein.Text, out double protein))
             {
-                await DisplayAlert("Error", "Please enter valid food name and calories.", "OK");
+                await DisplayAlert("Error", "Enter valid name, kcal/100g, and protein/100g.", "OK");
                 return;
             }
 
-          
-            FoodDatabase.AddFood(CustomFoodName.Text, calories);
+            FoodDatabase.AddFood(CustomFoodName.Text, kcal, protein);
 
-           
+            await FoodCsvService.AppendCustomAsync(new FoodItem
+            {
+                Name = CustomFoodName.Text.Trim(),
+                CaloriesPer100g = kcal,
+                ProteinPer100g = protein
+            });
+
             CustomFoodName.Text = "";
             CustomFoodCalories.Text = "";
+            CustomFoodProtein.Text = "";
 
             LoadFoodList();
         }
 
+
         private void UpdateRemainingCalories()
         {
-            double caloriesRemaining = dailyCalorieNeed - caloriesConsumed;
+            double caloriesRemaining =Math.Round(dailyCalorieNeed - caloriesConsumed);
             DailyGoalLabel.Text = $"Daily Goal: {dailyCalorieNeed:F0} kcal";
             CaloriesLabel.Text = $"Calories Consumed: {caloriesConsumed:F1} kcal";
-            RemainingCaloriesLabel.Text = $"Remaining: {caloriesRemaining:F1} kcal";
+            ProteinLabel.Text = $"Protein Consumed: {proteinConsumed:F1} g";
+            RemainingCaloriesLabel.Text = $"Remaining: {caloriesRemaining:F0} kcal";
+        }
+        private async Task SaveTodayLogAsync()
+        {
+            var todayLog = new DailyLog
+            {
+                Date = DateTime.Today,
+                Foods = eatenFoods,
+                Calories = eatenFoods.Sum(f => f.TotalCalories),
+                Protein = eatenFoods.Sum(f => f.TotalProtein),
+                DailyGoal = dailyCalorieNeed
+            };
+
+            await FoodLogService.SaveLogAsync(todayLog);
         }
     }
 }

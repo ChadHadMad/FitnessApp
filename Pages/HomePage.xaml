@@ -14,28 +14,6 @@
                 FontSize="32"
                 FontAttributes="Bold"
                 HorizontalOptions="Center" />
-            <!--
-            <Border 
-                Stroke="{DynamicResource PrimaryColor}"
-                StrokeThickness="1"
-                BackgroundColor="{DynamicResource SecondaryColor}"
-                Padding="20"
-                StrokeShape="RoundRectangle 20">
-
-                <VerticalStackLayout Spacing="10">
-                    <Label 
-                        Text="Today's Workout Summary" 
-                        FontSize="20"
-                        FontAttributes="Bold"
-                        TextColor="White"/>
-
-                    <Label 
-                        x:Name="WorkoutSummaryLabel" 
-                        Text="No workouts logged yet."
-                        TextColor="White"/>
-                </VerticalStackLayout>
-            </Border>
-            -->
             <Button 
                 Text="Start a new profile"
                 Clicked="OnLogWorkoutClicked"

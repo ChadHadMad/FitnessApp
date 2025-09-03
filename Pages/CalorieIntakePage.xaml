@@ -14,12 +14,10 @@
                    FontAttributes="Bold"
                    HorizontalOptions="Center" />
 
-            
             <SearchBar x:Name="FoodSearchBar"
                        Placeholder="Search food..."
                        TextChanged="OnFoodSearchChanged" />
 
-            
             <CollectionView x:Name="FoodListView"
                             SelectionMode="Single"
                             SelectionChanged="OnFoodSelected"
@@ -28,39 +26,71 @@
                     <DataTemplate>
                         <StackLayout Padding="10">
                             <Label Text="{Binding Name}" FontAttributes="Bold" />
-                            <Label Text="{Binding Calories, StringFormat='{0} kcal'}" FontSize="Small" />
+                            <Label Text="{Binding CaloriesPer100g, StringFormat='Calories: {0} kcal / 100g'}" FontSize="Small" />
+                            <Label Text="{Binding ProteinPer100g, StringFormat='Protein: {0} g / 100g'}" FontSize="Small" />
                         </StackLayout>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
             </CollectionView>
 
-           
-            <Entry x:Name="CustomFoodName" Placeholder="Custom food name" />
-            <Entry x:Name="CustomFoodCalories" Placeholder="Calories per serving" Keyboard="Numeric" />
+            <Entry x:Name="GramsEntry" 
+                   Placeholder="Enter grams eaten"
+                   Keyboard="Numeric" />
+
+            <Button Text="Add to Log" Clicked="OnAddFoodToLogClicked" />
+
+            <Label Text="Add Custom Food:" FontAttributes="Bold" FontSize="18" />
+            <Entry x:Name="CustomFoodName" Placeholder="Food name" />
+            <Entry x:Name="CustomFoodCalories" Placeholder="Calories per 100g" Keyboard="Numeric" />
+            <Entry x:Name="CustomFoodProtein" Placeholder="Protein per 100g" Keyboard="Numeric" />
             <Button Text="Add Food to Database" Clicked="OnAddCustomFoodClicked" />
 
-         
             <Label Text="Foods Eaten Today:" FontAttributes="Bold" FontSize="18" />
             <CollectionView x:Name="EatenListView"
-                            HeightRequest="150">
+                HeightRequest="200">
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
-                        <StackLayout Padding="10">
-                            <Label Text="{Binding Name}" />
-                            <Label Text="{Binding Calories, StringFormat='{0:F1} kcal'}" FontSize="Small" />
-                        </StackLayout>
+                        <SwipeView>
+                            <SwipeView.RightItems>
+                                <SwipeItems>
+                                    <SwipeItem
+                            Text="Edit"
+                            BackgroundColor="Orange"
+                            Invoked="OnEditFoodClicked" />
+                                    <SwipeItem
+                            Text="Delete"
+                            BackgroundColor="Red"
+                            Invoked="OnDeleteFoodClicked" />
+                                </SwipeItems>
+                            </SwipeView.RightItems>
+
+                            <Grid Padding="10">
+                                <VerticalStackLayout>
+                                    <Label Text="{Binding Name}" FontAttributes="Bold" />
+                                    <Label Text="{Binding GramsConsumed, StringFormat='{0} g'}" FontSize="Small" />
+                                    <Label Text="{Binding TotalCalories, StringFormat='Calories: {0:F1} kcal'}" FontSize="Small" />
+                                    <Label Text="{Binding TotalProtein, StringFormat='Protein: {0:F1} g protein'}" FontSize="Small" />
+                                </VerticalStackLayout>
+                            </Grid>
+                        </SwipeView>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
             </CollectionView>
             <Label x:Name="DailyGoalLabel"
-                Text="Daily Goal: -- kcal"
-                 FontAttributes="Bold"
-                 FontSize="20"
-                 HorizontalOptions="Center"
-                 TextColor="DarkGreen" />
-           
+                   Text="Daily Goal: -- kcal"
+                   FontAttributes="Bold"
+                   FontSize="20"
+                   HorizontalOptions="Center"
+                   TextColor="DarkGreen" />
+
             <Label x:Name="CaloriesLabel"
                    Text="Calories Consumed: 0 kcal"
+                   FontAttributes="Bold"
+                   FontSize="20"
+                   HorizontalOptions="Center" />
+
+            <Label x:Name="ProteinLabel"
+                   Text="Protein Consumed: 0 g"
                    FontAttributes="Bold"
                    FontSize="20"
                    HorizontalOptions="Center" />

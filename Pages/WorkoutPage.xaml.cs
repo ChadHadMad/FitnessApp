@@ -2,27 +2,37 @@ using Microsoft.Maui.Storage;
 using System.Text.Json;
 using FitnessApp.Data;
 using FitnessApp.Models;
+using FitnessApp.Services;
 
 namespace FitnessApp.Pages
 {
     public partial class WorkoutPage : ContentPage
     {
         private List<WorkoutItem> recommendedWorkouts = new();
-        private List<WorkoutItem> loggedWorkouts = new();
-        private double caloriesBurnedToday;
+        private List<LoggedWorkout> loggedWorkouts = new();
+        private WorkoutLogData todayLog = new();
 
         public WorkoutPage()
         {
             InitializeComponent();
         }
 
-        protected override void OnAppearing()
+        protected override async void OnAppearing()
         {
             base.OnAppearing();
-            LoadRecommendedWorkouts();
-            ResetIfNewDay();
-            LoadWorkoutLog();
-            UpdateCaloriesBurnedLabel();
+
+            LoadRecommendedWorkouts();                     
+
+            await WorkoutLogService.EnsureDailyResetAsync();
+
+            var today = await WorkoutLogService.GetTodayAsync();
+            todayLog = today;
+            loggedWorkouts = today.Workouts;
+
+            LoggedWorkoutsListView.ItemsSource = null;
+            LoggedWorkoutsListView.ItemsSource = loggedWorkouts;
+
+            RefreshLoggedListAndTotals();                  
         }
 
         private void LoadRecommendedWorkouts()
@@ -31,117 +41,125 @@ namespace FitnessApp.Pages
             WorkoutListView.ItemsSource = recommendedWorkouts;
         }
 
-        private void ResetIfNewDay()
-        {
-            string lastDate = Preferences.Get("LastWorkoutDate", "");
-            string today = DateTime.Today.ToString("yyyy-MM-dd");
-
-            if (lastDate != today)
-            {
-                caloriesBurnedToday = 0;
-                loggedWorkouts.Clear();
-                Preferences.Set("CaloriesBurnedToday", 0.0);
-                SaveWorkoutLog();
-                Preferences.Set("LastWorkoutDate", today);
-            }
-            else
-            {
-                caloriesBurnedToday = Preferences.Get("CaloriesBurnedToday", 0.0);
-            }
-        }
-
-        private void SaveWorkoutLog()
-        {
-            var workoutLog = new WorkoutLogData
-            {
-                Date = DateTime.Today.ToString("yyyy-MM-dd"),
-                Workouts = loggedWorkouts
-            };
-
-            string json = JsonSerializer.Serialize(workoutLog);
-            Preferences.Set("WorkoutLog", json);
-        }
-
-        private void LoadWorkoutLog()
-        {
-            string json = Preferences.Get("WorkoutLog", "");
-            if (!string.IsNullOrEmpty(json))
-            {
-                var workoutLog = JsonSerializer.Deserialize<WorkoutLogData>(json);
-
-                if (workoutLog != null && workoutLog.Date == DateTime.Today.ToString("yyyy-MM-dd"))
-                {
-                    loggedWorkouts = workoutLog.Workouts;
-                }
-                else
-                {
-                    loggedWorkouts = new List<WorkoutItem>();
-                    SaveWorkoutLog();
-                }
-            }
-            else
-            {
-                loggedWorkouts = new List<WorkoutItem>();
-            }
-
-            LoggedWorkoutsListView.ItemsSource = null;
-            LoggedWorkoutsListView.ItemsSource = loggedWorkouts;
-        }
-
         private void OnWorkoutSearchChanged(object sender, TextChangedEventArgs e)
         {
-            var searchText = e.NewTextValue?.ToLower() ?? "";
-            WorkoutListView.ItemsSource = string.IsNullOrWhiteSpace(searchText)
-                ? recommendedWorkouts
-                : recommendedWorkouts.Where(w => w.Name.ToLower().Contains(searchText)).ToList();
+            var q = e.NewTextValue?.ToLower() ?? "";
+            WorkoutListView.ItemsSource =
+                string.IsNullOrWhiteSpace(q)
+                    ? recommendedWorkouts
+                    : recommendedWorkouts.Where(w => w.Name.ToLower().Contains(q)).ToList();
         }
 
-        private void OnWorkoutSelected(object sender, SelectionChangedEventArgs e)
+        private async void OnWorkoutSelected(object sender, SelectionChangedEventArgs e)
         {
-            if (e.CurrentSelection.FirstOrDefault() is WorkoutItem selectedWorkout)
+            if (e.CurrentSelection.FirstOrDefault() is not WorkoutItem selected) return;
+            WorkoutListView.SelectedItem = null;
+
+            var minutesText = await DisplayPromptAsync("Duration", $"Minutes for {selected.Name}:", keyboard: Keyboard.Numeric);
+            if (!double.TryParse(minutesText, out double minutes) || minutes <= 0) return;
+
+            var entry = new LoggedWorkout
             {
-                AddWorkoutToLog(selectedWorkout);
-                WorkoutListView.SelectedItem = null;
-            }
+                Name = selected.Name,
+                CaloriesPerMinute = selected.CaloriesPerMinute,
+                DurationMinutes = minutes,
+                Date = DateTime.Today
+            };
+
+            await WorkoutLogService.AddLoggedWorkoutAsync(DateTime.Today.ToString("yyyy-MM-dd"), entry);
+            await WorkoutCsvService.AppendAsync(entry); // <- append to CSV
+
+            todayLog.Workouts.Add(entry);
+            RefreshLoggedListAndTotals();
         }
 
-        private void OnAddCustomWorkoutClicked(object sender, EventArgs e)
+        private async void OnAddCustomWorkoutClicked(object sender, EventArgs e)
         {
-            if (string.IsNullOrWhiteSpace(CustomWorkoutName.Text) ||
-                !double.TryParse(CustomWorkoutCalories.Text, out double calories))
+            if (string.IsNullOrWhiteSpace(CustomWorkoutName.Text)
+                || !double.TryParse(CustomWorkoutKcalPerMin.Text, out double cpm)
+                || cpm <= 0)
             {
-                DisplayAlert("Error", "Please enter valid workout name and calories.", "OK");
+                await DisplayAlert("Error", "Enter a name and a valid 'calories per minute'.", "OK");
                 return;
             }
 
-            var workout = new WorkoutItem
+            var minutesText = await DisplayPromptAsync("Duration",
+                $"Minutes for {CustomWorkoutName.Text}:",
+                keyboard: Keyboard.Numeric);
+
+            if (!double.TryParse(minutesText, out double minutes) || minutes <= 0) return;
+
+            var entry = new LoggedWorkout
             {
-                Name = CustomWorkoutName.Text,
-                CaloriesBurned = calories
+                Name = CustomWorkoutName.Text.Trim(),
+                CaloriesPerMinute = cpm,
+                DurationMinutes = minutes,
+                Date = DateTime.Today
             };
 
-            AddWorkoutToLog(workout);
+            await WorkoutLogService.AddLoggedWorkoutAsync(DateTime.Today.ToString("yyyy-MM-dd"), entry);
+            await WorkoutCsvService.AppendAsync(entry); // <- append to CSV
+
+            if (!recommendedWorkouts.Any(w => w.Name.Equals(entry.Name, StringComparison.OrdinalIgnoreCase)))
+                recommendedWorkouts.Add(new WorkoutItem { Name = entry.Name, CaloriesPerMinute = cpm });
 
             CustomWorkoutName.Text = "";
-            CustomWorkoutCalories.Text = "";
+            CustomWorkoutKcalPerMin.Text = "";
+
+            RefreshLoggedListAndTotals();
         }
 
-        private void AddWorkoutToLog(WorkoutItem workout)
+        private async void OnEditLoggedWorkout(object sender, EventArgs e)
         {
-            loggedWorkouts.Add(workout);
-            caloriesBurnedToday += workout.CaloriesBurned;
+            if (sender is not SwipeItem swipe || swipe.BindingContext is not LoggedWorkout entry) return;
 
-            Preferences.Set("CaloriesBurnedToday", caloriesBurnedToday);
-            SaveWorkoutLog();
+            var newMinutesText = await DisplayPromptAsync("Edit Duration",
+                $"Minutes for {entry.Name}:",
+                initialValue: entry.DurationMinutes.ToString(),
+                keyboard: Keyboard.Numeric);
 
+            if (!double.TryParse(newMinutesText, out double newMinutes) || newMinutes <= 0) return;
+
+            entry.DurationMinutes = newMinutes;
+
+            await WorkoutLogService.UpdateLoggedWorkoutAsync(DateTime.Today.ToString("yyyy-MM-dd"), entry);
+
+            await WorkoutCsvService.RewriteDayAsync(DateTime.Today, todayLog.Workouts);
+
+            RefreshLoggedListAndTotals();
+        }
+
+        private async void OnDeleteLoggedWorkout(object sender, EventArgs e)
+        {
+            if (sender is not SwipeItem swipe || swipe.BindingContext is not LoggedWorkout entry) return;
+
+            bool ok = await DisplayAlert("Delete", $"Delete {entry.Name}?", "Yes", "No");
+            if (!ok) return;
+
+            await WorkoutLogService.DeleteLoggedWorkoutAsync(DateTime.Today.ToString("yyyy-MM-dd"), entry.Id);
+
+            todayLog.Workouts.RemoveAll(w => w.Id == entry.Id);
+
+            await WorkoutCsvService.RewriteDayAsync(DateTime.Today, todayLog.Workouts);
+
+            RefreshLoggedListAndTotals();
+        }
+
+        private void RefreshLoggedListAndTotals()
+        {
             LoggedWorkoutsListView.ItemsSource = null;
-            LoggedWorkoutsListView.ItemsSource = loggedWorkouts;
-            UpdateCaloriesBurnedLabel();
+            LoggedWorkoutsListView.ItemsSource = todayLog.Workouts;
+
+            var total = todayLog.Workouts.Sum(w => w.CaloriesPerMinute * w.DurationMinutes);
+
+            Preferences.Set("CaloriesBurnedToday", total);
+
+            CaloriesBurnedLabel.Text = $"Calories Burned Today: {total:F1} kcal";
         }
 
         private void UpdateCaloriesBurnedLabel()
         {
-            CaloriesBurnedLabel.Text = $"Calories Burned Today: {caloriesBurnedToday:F1} kcal";
+            CaloriesBurnedLabel.Text = $"Calories Burned Today: {todayLog.TotalCalories:F1} kcal";
         }
     }
 }

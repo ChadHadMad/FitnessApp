@@ -1,53 +1,64 @@
-using Microsoft.Maui.Storage;
+﻿using FitnessApp.Models;
+using FitnessApp.Services;
+using LiveChartsCore;
+using LiveChartsCore.SkiaSharpView;
+using LiveChartsCore.SkiaSharpView.Painting;
+using System.Collections.ObjectModel;
 
 namespace FitnessApp.Pages
 {
     public partial class HealthDashboardPage : ContentPage
     {
+        public ObservableCollection<ISeries> WeeklyCaloriesSeries { get; set; }
+        public Axis[] XAxes { get; set; }
+
         public HealthDashboardPage()
         {
             InitializeComponent();
+
+            WeeklyCaloriesSeries = new ObservableCollection<ISeries>();
+            XAxes = new Axis[] { new Axis { Labels = new List<string>() } };
+
+            WeeklyCaloriesChart.Series = WeeklyCaloriesSeries;
+            WeeklyCaloriesChart.XAxes = XAxes;
         }
 
-        protected override void OnAppearing()
+        protected override async void OnAppearing()
         {
             base.OnAppearing();
-            LoadDashboardData();
+
+            await FoodLogService.EnsureDailyResetAsync();
+
+            await LoadDashboardData();
+            await LoadWeeklyCaloriesChart();
+            await LoadMonthlyCaloriesChart();
+
+            await RefreshCaloriesConsistencyPieAsync();
         }
 
-        private void LoadDashboardData()
+        private async Task LoadDashboardData()
         {
-            string gender = Preferences.Get("Gender", "");
-            double heightCm = Preferences.Get("HeightCm", 0.0);
-            double weightKg = Preferences.Get("WeightKg", 0.0);
-            int age = Preferences.Get("Age", 0);
-            string activityLevel = Preferences.Get("ActivityLevel", "");
-
-            if (heightCm <= 0 || weightKg <= 0 || age <= 0)
+            var profile = await UserProfileService.LoadProfileAsync();
+            if (profile == null || profile.HeightCm <= 0 || profile.WeightKg <= 0 || profile.Age <= 0)
             {
                 WeightLabel.Text = "Please complete your profile.";
                 return;
             }
 
-            // Height
-            HeightLabel.Text = $"{heightCm:F1} cm";
+            HeightLabel.Text = $"{profile.HeightCm:F1} cm";
+            WeightLabel.Text = $"{profile.WeightKg:F1} kg";
+            WeightProgressBar.Progress = Math.Min(profile.WeightKg / 150.0, 1.0);
 
-            // Weight
-            WeightLabel.Text = $"{weightKg:F1} kg";
-            WeightProgressBar.Progress = Math.Min(weightKg / 150.0, 1.0); 
-
-            // BMI
-            double heightMeters = heightCm / 100.0;
-            double bmi = weightKg / (heightMeters * heightMeters);
+            double heightMeters = profile.HeightCm / 100.0;
+            double bmi = profile.WeightKg / (heightMeters * heightMeters);
             BMILabel.Text = $"{bmi:F1}";
-            BMIProgressBar.Progress = Math.Min(bmi / 40.0, 1.0); 
+            BMIProgressBar.Progress = Math.Min(bmi / 40.0, 1.0);
 
-            // Calories
-            double bmr = (gender == "Male")
-                ? 10 * weightKg + 6.25 * heightCm - 5 * age + 5
-                : 10 * weightKg + 6.25 * heightCm - 5 * age - 161;
+            double bmr = (profile.Gender == "Male")
+                ? 10 * profile.TargetWeightKg + 6.25 * profile.HeightCm - 5 * profile.Age + 5
+                : 10 * profile.TargetWeightKg + 6.25 * profile.HeightCm - 5 * profile.Age - 161;
 
-            double multiplier = activityLevel switch
+            double multiplier = profile.ActivityLevel switch
             {
                 "Sedentary" => 1.2,
                 "Lightly Active" => 1.375,
@@ -58,10 +69,68 @@ namespace FitnessApp.Pages
             };
 
             double dailyCalories = bmr * multiplier;
+            if (profile.TargetWeightKg > 0 && Math.Abs(profile.TargetWeightKg - profile.WeightKg) >= 1)
+                dailyCalories += profile.TargetWeightKg > profile.WeightKg ? 500 : -500;
+
             CaloriesLabel.Text = $"{dailyCalories:F0} kcal";
 
-            double proteinNeeded = weightKg * 1.6;
+            double proteinNeeded = profile.WeightKg * 1.6;
             ProteinLabel.Text = $"{proteinNeeded:F0} g";
         }
+
+        private async Task LoadWeeklyCaloriesChart()
+        {
+            var logs = await FoodLogService.GetLast7DaysAsync();
+            var values = logs.Select(l => (double)l.Foods.Sum(f => f.TotalCalories)).ToArray();
+            var labels = logs.Select(l => l.Date.ToString("ddd")).ToArray();
+
+            if (values.Length == 0) { values = new double[] { 0 }; labels = new[] { "—" }; }
+
+            WeeklyCaloriesChart.Series = new ISeries[]
+            {
+            new ColumnSeries<double> { Values = values }
+            };
+            WeeklyCaloriesChart.XAxes = new[] { new Axis { Labels = labels } };
+        }
+
+        private async Task LoadMonthlyCaloriesChart()
+        {
+            var logs = await FoodLogService.GetLast30DaysAsync();
+            var values = logs.Select(l => (double)l.Foods.Sum(f => f.TotalCalories)).ToArray();
+            var labels = logs.Select(l => l.Date.ToString("dd MMM")).ToArray();
+
+            if (values.Length == 0) { values = new double[] { 0 }; labels = new[] { "—" }; }
+
+            MonthlyCaloriesChart.Series = new ISeries[]
+            {
+            new LineSeries<double> { Values = values }
+            };
+            MonthlyCaloriesChart.XAxes = new[] { new Axis { Labels = labels } };
+        }
+
+        private async Task RefreshCaloriesConsistencyPieAsync()
+        {
+            var stats = await StatisticsService.GetStatsAsync(days: 7); // or 30
+
+            ConsistencyPieChart.Series = new ISeries[]
+            {
+            new PieSeries<double>
+            {
+                Values = new[] { stats.ConsistencyPercent },
+                Name = "On Track",
+                DataLabelsSize = 14,
+                DataLabelsPosition = LiveChartsCore.Measure.PolarLabelsPosition.Middle
+            },
+            new PieSeries<double>
+            {
+                Values = new[] { 100 - stats.ConsistencyPercent },
+                Name = "Missed",
+                DataLabelsSize = 14,
+                DataLabelsPosition = LiveChartsCore.Measure.PolarLabelsPosition.Middle
+            }
+            };
+        }
+        private async void OnEditProfileClicked(object sender, EventArgs e)
+            => await Shell.Current.GoToAsync("UserProfilePage");
     }
 }

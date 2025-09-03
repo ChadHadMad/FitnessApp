@@ -5,26 +5,24 @@
     xmlns:pages="clr-namespace:FitnessApp.Pages"
     x:Class="FitnessApp.AppShell">
 
-    <TabBar>
-        <ShellContent
-            Title="Home"
-            Icon="home.png"
-            ContentTemplate="{DataTemplate pages:HomePage}"
-            Route="Home" />
-        <ShellContent
-            Title="User"
-            Icon="user.png"
-            ContentTemplate="{DataTemplate pages:UserProfilePage}"
-            Route="User" />
-        <ShellContent 
-            Title="Calories" 
-            ContentTemplate="{DataTemplate pages:CalorieIntakePage}" />
-        <ShellContent
-            Title="Workout"
-            ContentTemplate="{DataTemplate pages:WorkoutPage}" />
+    <TabBar x:Name="MainTabs" IsVisible="False">
         <ShellContent 
             Title="Health Dashboard" 
-            ContentTemplate="{DataTemplate pages:HealthDashboardPage}" />
-      
+            ContentTemplate="{DataTemplate pages:HealthDashboardPage}"
+            Route="HealthDashboardPage"/>
+        <ShellContent 
+            Title="Calories" 
+            ContentTemplate="{DataTemplate pages:CalorieIntakePage}"
+            Route="CalorieIntakePage"/>
+        <ShellContent
+            Title="Workout"
+            ContentTemplate="{DataTemplate pages:WorkoutPage}"
+            Route="WorkoutPage"/>
     </TabBar>
+
+    <ShellContent 
+        x:Name="HomePageItem"
+        Title="Welcome"
+        ContentTemplate="{DataTemplate pages:HomePage}"
+        Route="HomePage"/>
 </Shell>

@@ -67,6 +67,22 @@
         "net9.0-android35.0": {
           "targetAlias": "net9.0-android",
           "dependencies": {
+            "CommunityToolkit.Mvvm": {
+              "target": "Package",
+              "version": "[8.4.0, )"
+            },
+            "CsvHelper": {
+              "target": "Package",
+              "version": "[33.1.0, )"
+            },
+            "LiveChartsCore.SkiaSharpView.Maui": {
+              "target": "Package",
+              "version": "[2.0.0-rc5.4, )"
+            },
+            "Microcharts.Maui": {
+              "target": "Package",
+              "version": "[1.0.1, )"
+            },
             "Microsoft.Extensions.Logging.Debug": {
               "target": "Package",
               "version": "[9.0.0, )"
@@ -80,6 +96,10 @@
               "target": "Package",
               "version": "[9.0.6, )",
               "autoReferenced": true
+            },
+            "SkiaSharp.Views.Maui.Controls": {
+              "target": "Package",
+              "version": "[3.119.0, )"
             },
             "sqlite-net-pcl": {
               "target": "Package",
@@ -110,6 +130,22 @@
         "net9.0-ios18.5": {
           "targetAlias": "net9.0-ios",
           "dependencies": {
+            "CommunityToolkit.Mvvm": {
+              "target": "Package",
+              "version": "[8.4.0, )"
+            },
+            "CsvHelper": {
+              "target": "Package",
+              "version": "[33.1.0, )"
+            },
+            "LiveChartsCore.SkiaSharpView.Maui": {
+              "target": "Package",
+              "version": "[2.0.0-rc5.4, )"
+            },
+            "Microcharts.Maui": {
+              "target": "Package",
+              "version": "[1.0.1, )"
+            },
             "Microsoft.Extensions.Logging.Debug": {
               "target": "Package",
               "version": "[9.0.0, )"
@@ -123,6 +159,10 @@
               "target": "Package",
               "version": "[9.0.6, )",
               "autoReferenced": true
+            },
+            "SkiaSharp.Views.Maui.Controls": {
+              "target": "Package",
+              "version": "[3.119.0, )"
             },
             "sqlite-net-pcl": {
               "target": "Package",
@@ -153,6 +193,22 @@
         "net9.0-maccatalyst18.5": {
           "targetAlias": "net9.0-maccatalyst",
           "dependencies": {
+            "CommunityToolkit.Mvvm": {
+              "target": "Package",
+              "version": "[8.4.0, )"
+            },
+            "CsvHelper": {
+              "target": "Package",
+              "version": "[33.1.0, )"
+            },
+            "LiveChartsCore.SkiaSharpView.Maui": {
+              "target": "Package",
+              "version": "[2.0.0-rc5.4, )"
+            },
+            "Microcharts.Maui": {
+              "target": "Package",
+              "version": "[1.0.1, )"
+            },
             "Microsoft.Extensions.Logging.Debug": {
               "target": "Package",
               "version": "[9.0.0, )"
@@ -166,6 +222,10 @@
               "target": "Package",
               "version": "[9.0.6, )",
               "autoReferenced": true
+            },
+            "SkiaSharp.Views.Maui.Controls": {
+              "target": "Package",
+              "version": "[3.119.0, )"
             },
             "sqlite-net-pcl": {
               "target": "Package",
@@ -197,6 +257,22 @@
         "net9.0-windows10.0.19041": {
           "targetAlias": "net9.0-windows10.0.19041.0",
           "dependencies": {
+            "CommunityToolkit.Mvvm": {
+              "target": "Package",
+              "version": "[8.4.0, )"
+            },
+            "CsvHelper": {
+              "target": "Package",
+              "version": "[33.1.0, )"
+            },
+            "LiveChartsCore.SkiaSharpView.Maui": {
+              "target": "Package",
+              "version": "[2.0.0-rc5.4, )"
+            },
+            "Microcharts.Maui": {
+              "target": "Package",
+              "version": "[1.0.1, )"
+            },
             "Microsoft.Extensions.Logging.Debug": {
               "target": "Package",
               "version": "[9.0.0, )"
@@ -204,6 +280,10 @@
             "Microsoft.Maui.Controls": {
               "target": "Package",
               "version": "[9.0.51, )"
+            },
+            "SkiaSharp.Views.Maui.Controls": {
+              "target": "Package",
+              "version": "[3.119.0, )"
             },
             "sqlite-net-pcl": {
               "target": "Package",

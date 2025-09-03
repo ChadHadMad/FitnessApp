@@ -9,7 +9,12 @@ namespace FitnessApp.Models
 {
     public class FoodItem
     {
-        public string Name { get; set; } = string.Empty; 
-        public double Calories { get; set; }
+        public string Name { get; set; } = "";
+        public double CaloriesPer100g { get; set; }
+        public double ProteinPer100g { get; set; }
+        public double GramsConsumed { get; set; }
+
+        public double TotalCalories => (CaloriesPer100g / 100.0) * GramsConsumed;
+        public double TotalProtein => (ProteinPer100g / 100.0) * GramsConsumed;
     }
 }

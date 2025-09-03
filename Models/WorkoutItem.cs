@@ -8,7 +8,7 @@ namespace FitnessApp.Models
 {
     public class WorkoutItem
     {
-        public string Name { get; set; }
-        public double CaloriesBurned { get; set; }
+        public string Name { get; set; } = "";
+        public double CaloriesPerMinute { get; set; }
     }
 }

@@ -9,11 +9,11 @@ namespace FitnessApp.Data
         {
             return new List<WorkoutItem>
             {
-                new WorkoutItem { Name = "Running (30 min)", CaloriesBurned = 300 },
-                new WorkoutItem { Name = "Cycling (30 min)", CaloriesBurned = 250 },
-                new WorkoutItem { Name = "Swimming (30 min)", CaloriesBurned = 400 },
-                new WorkoutItem { Name = "Jump Rope (15 min)", CaloriesBurned = 200 },
-                new WorkoutItem { Name = "Yoga (45 min)", CaloriesBurned = 180 }
+                new WorkoutItem { Name = "Running", CaloriesPerMinute = 10 },   
+                new WorkoutItem { Name = "Cycling", CaloriesPerMinute = 8.33 },  
+                new WorkoutItem { Name = "Swimming", CaloriesPerMinute = 13.33 }, 
+                new WorkoutItem { Name = "Jump Rope", CaloriesPerMinute = 13.33 },
+                new WorkoutItem { Name = "Yoga", CaloriesPerMinute = 4 }          
             };
         }
     }

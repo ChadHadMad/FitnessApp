@@ -3,9 +3,8 @@
              xmlns:local="clr-namespace:FitnessApp.Pages"
              x:Class="FitnessApp.Pages.WorkoutPage"
              Title="Workout Log">
-
     <ScrollView>
-        <VerticalStackLayout Padding="20" Spacing="20">
+        <VerticalStackLayout Padding="20" Spacing="16">
 
             <Label Text="Log Your Workouts"
                    FontSize="28"
@@ -15,42 +14,64 @@
             <SearchBar x:Name="WorkoutSearchBar"
                        Placeholder="Search workouts..."
                        TextChanged="OnWorkoutSearchChanged" />
-            
+
             <CollectionView x:Name="WorkoutListView"
                             SelectionMode="Single"
                             SelectionChanged="OnWorkoutSelected"
-                            HeightRequest="200">
+                            HeightRequest="240">
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
-                        <StackLayout Padding="10">
-                            <Label Text="{Binding Name}" FontAttributes="Bold" />
-                            <Label Text="{Binding CaloriesBurned, StringFormat='{0} kcal'}" FontSize="Small" />
-                        </StackLayout>
+                        <Grid Padding="10" ColumnDefinitions="*,Auto">
+                            <Label Text="{Binding Name}" FontAttributes="Bold"/>
+                            <Label Grid.Column="1"
+                                   Text="{Binding CaloriesPerMinute, StringFormat='{0} kcal/min'}"
+                                   VerticalOptions="Center" />
+                        </Grid>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
             </CollectionView>
 
             <Entry x:Name="CustomWorkoutName" Placeholder="Custom workout name" />
-            <Entry x:Name="CustomWorkoutCalories" Placeholder="Calories burned" Keyboard="Numeric" />
-            <Button Text="Add Workout" Clicked="OnAddCustomWorkoutClicked" />
+            <Entry x:Name="CustomWorkoutKcalPerMin" Placeholder="Calories per minute" Keyboard="Numeric" />
+            <Button Text="Add Custom Workout" Clicked="OnAddCustomWorkoutClicked" />
 
             <Label Text="Workouts Today:" FontAttributes="Bold" FontSize="18" />
-            <CollectionView x:Name="LoggedWorkoutsListView" HeightRequest="150">
+
+            <CollectionView x:Name="LoggedWorkoutsListView" HeightRequest="220">
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
-                        <StackLayout Padding="10">
-                            <Label Text="{Binding Name}" />
-                            <Label Text="{Binding CaloriesBurned, StringFormat='{0} kcal'}" FontSize="Small" />
-                        </StackLayout>
+                        <SwipeView>
+                            <SwipeView.LeftItems>
+                                <SwipeItems>
+                                    <SwipeItem Text="Edit"
+                                               BackgroundColor="DodgerBlue"
+                                               Invoked="OnEditLoggedWorkout"/>
+                                </SwipeItems>
+                            </SwipeView.LeftItems>
+                            <SwipeView.RightItems>
+                                <SwipeItems>
+                                    <SwipeItem Text="Delete"
+                                               BackgroundColor="Tomato"
+                                               Invoked="OnDeleteLoggedWorkout"/>
+                                </SwipeItems>
+                            </SwipeView.RightItems>
+
+                            <Grid Padding="12" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="12">
+                                <Label Text="{Binding Name}" FontAttributes="Bold"/>
+                                <Label Grid.Column="1" Text="{Binding DurationMinutes, StringFormat='{0} min'}" />
+                                <Label Grid.Column="2" Text="{Binding CaloriesBurned, StringFormat='{0} kcal'}" />
+                            </Grid>
+                        </SwipeView>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
             </CollectionView>
 
             <Label x:Name="CaloriesBurnedLabel"
-                   Text="Calories Burned: 0 kcal"
+                   Text="Calories Burned Today: 0 kcal"
                    FontAttributes="Bold"
                    FontSize="20"
                    HorizontalOptions="Center" />
+
 
         </VerticalStackLayout>
     </ScrollView>

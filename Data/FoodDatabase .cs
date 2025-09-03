@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Text;
 using FitnessApp.Models;
 using System.Reflection;
-
+using FitnessApp.Data;
 namespace FitnessApp.Services
 {
     public static class FoodDatabase
@@ -15,126 +11,114 @@ namespace FitnessApp.Services
 
         public static async Task InitializeAsync()
         {
-            if (_isInitialized)
-                return; // Already loaded
+            if (_isInitialized) return;
 
             try
             {
                 var assembly = Assembly.GetExecutingAssembly();
-                var resourceName = "FitnessApp.Data.foundation_foods.csv"; // Updated filename
+                var resourceName = "FitnessApp.Data.cleaned_nutrition_dataset_per100g.csv";
 
                 using var stream = assembly.GetManifestResourceStream(resourceName);
                 if (stream == null)
                 {
-                    // Fallback to default foods if CSV not found
                     LoadDefaultFoods();
-                    _isInitialized = true;
-                    return;
                 }
-
-                using var reader = new StreamReader(stream, Encoding.UTF8);
-
-                // Skip header line
-                await reader.ReadLineAsync();
-
-                string? line;
-                while ((line = await reader.ReadLineAsync()) != null)
+                else
                 {
-                    if (string.IsNullOrWhiteSpace(line))
-                        continue;
+                    using var reader = new StreamReader(stream, Encoding.UTF8);
 
-                    // Simple split approach - your CSV has quotes around names
-                    int lastCommaIndex = line.LastIndexOf(',');
-                    if (lastCommaIndex > 0)
+                    await reader.ReadLineAsync(); 
+
+                    string? line;
+                    while ((line = await reader.ReadLineAsync()) != null)
                     {
-                        string name = line.Substring(0, lastCommaIndex).Trim().Trim('"');
-                        string calorieString = line.Substring(lastCommaIndex + 1).Trim();
+                        if (string.IsNullOrWhiteSpace(line)) continue;
 
-                        // Debug output - remove after fixing
-                        System.Diagnostics.Debug.WriteLine($"Line: {line}");
-                        System.Diagnostics.Debug.WriteLine($"Name: '{name}', Calories: '{calorieString}'");
+                        var parts = line.Split(',');
 
-                        if (!string.IsNullOrWhiteSpace(name) &&
-                            double.TryParse(calorieString, System.Globalization.NumberStyles.Float,
-                                          System.Globalization.CultureInfo.InvariantCulture, out double calories))
+                        if (parts.Length >= 12 &&
+                            double.TryParse(parts[7], System.Globalization.NumberStyles.Float,
+                                System.Globalization.CultureInfo.InvariantCulture, out double kcal) &&
+                            double.TryParse(parts[11], System.Globalization.NumberStyles.Float,
+                                System.Globalization.CultureInfo.InvariantCulture, out double protein))
                         {
-                            System.Diagnostics.Debug.WriteLine($"Successfully parsed: {name} = {calories} kcal");
                             Foods.Add(new FoodItem
                             {
-                                Name = name,
-                                Calories = calories
+                                Name = parts[5].Trim('"'),
+                                CaloriesPer100g = kcal,
+                                ProteinPer100g = protein
                             });
-                        }
-                        else
-                        {
-                            System.Diagnostics.Debug.WriteLine($"Failed to parse: name='{name}', calorieString='{calorieString}'");
                         }
                     }
                 }
 
+                try
+                {
+                    var customFoods = await FoodCsvService.LoadCustomAsync();
+                    if (customFoods.Count > 0)
+                    {
+                        var existing = new HashSet<string>(
+                            Foods.Select(f => f.Name),
+                            StringComparer.OrdinalIgnoreCase);
+
+                        foreach (var cf in customFoods)
+                            if (!existing.Contains(cf.Name))
+                                Foods.Add(cf);
+                    }
+                }
+                catch {}
+
                 _isInitialized = true;
-                System.Diagnostics.Debug.WriteLine($"Loaded {Foods.Count} food items from CSV");
             }
             catch (Exception ex)
             {
-                // Log the exception and load default foods as fallback
-                System.Diagnostics.Debug.WriteLine($"Error loading food database: {ex.Message}");
+                Console.WriteLine($"Error loading food database: {ex.Message}");
                 LoadDefaultFoods();
                 _isInitialized = true;
             }
-        }
-
-        private static string[] ParseCsvLine(string line)
-        {
-            var result = new List<string>();
-            var current = new StringBuilder();
-            bool inQuotes = false;
-
-            for (int i = 0; i < line.Length; i++)
-            {
-                char c = line[i];
-
-                if (c == '"')
-                {
-                    inQuotes = !inQuotes;
-                    // Don't add the quote character to the result
-                }
-                else if (c == ',' && !inQuotes)
-                {
-                    result.Add(current.ToString().Trim());
-                    current.Clear();
-                }
-                else
-                {
-                    current.Append(c);
-                }
-            }
-
-            result.Add(current.ToString().Trim());
-            return result.ToArray();
         }
 
         private static void LoadDefaultFoods()
         {
             Foods.AddRange(new List<FoodItem>
             {
-                new() { Name = "Apple", Calories = 95 },
-                new() { Name = "Banana", Calories = 105 },
-                new() { Name = "Orange", Calories = 62 },
-                new() { Name = "Chicken Breast (100g)", Calories = 165 },
-                new() { Name = "Rice (1 cup)", Calories = 205 },
-                new() { Name = "Bread (1 slice)", Calories = 79 },
-                new() { Name = "Milk (1 cup)", Calories = 149 },
-                new() { Name = "Eggs (1 large)", Calories = 70 }
+                new() { Name = "Apple", CaloriesPer100g = 52, ProteinPer100g = 0.3 },
+                new() { Name = "Banana", CaloriesPer100g = 89, ProteinPer100g = 1.1 },
+                new() { Name = "Chicken Breast", CaloriesPer100g = 165, ProteinPer100g = 31 },
+                new() { Name = "Rice (Cooked)", CaloriesPer100g = 130, ProteinPer100g = 2.7 },
+                new() { Name = "Bread (White)", CaloriesPer100g = 265, ProteinPer100g = 9 }
             });
         }
 
-        public static void AddFood(string name, double calories)
+        public static async Task AddFoodAsync(string name, double kcal, double protein, bool persist = true)
         {
-            if (!string.IsNullOrWhiteSpace(name) && calories >= 0)
+            if (string.IsNullOrWhiteSpace(name)) return;
+
+            var item = new FoodItem
             {
-                Foods.Add(new FoodItem { Name = name.Trim(), Calories = calories });
+                Name = name.Trim(),
+                CaloriesPer100g = kcal,
+                ProteinPer100g = protein
+            };
+
+            Foods.Add(item);
+
+            if (persist)
+            {
+                try { await FoodCsvService.AppendCustomAsync(item); }
+                catch {  }
             }
+        }
+
+        public static void AddFood(string name, double kcal, double protein)
+            => AddFoodAsync(name, kcal, protein, persist: true).GetAwaiter().GetResult();
+
+        public static void DeleteFood(FoodItem food) => Foods.Remove(food);
+
+        public static void UpdateFood(FoodItem food, double newKcal, double newProtein)
+        {
+            food.CaloriesPer100g = newKcal;
+            food.ProteinPer100g = newProtein;
         }
 
         public static List<FoodItem> SearchFoods(string query)
@@ -142,8 +126,7 @@ namespace FitnessApp.Services
             if (string.IsNullOrWhiteSpace(query))
                 return Foods.ToList();
 
-            return Foods.Where(f => f.Name.Contains(query, StringComparison.OrdinalIgnoreCase))
-                       .ToList();
+            return Foods.Where(f => f.Name.Contains(query, StringComparison.OrdinalIgnoreCase)).ToList();
         }
     }
 }

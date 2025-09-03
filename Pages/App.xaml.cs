@@ -1,8 +1,7 @@
-﻿using FitnessApp.Services;
-using FitnessApp.Models;
-//using FitnessApp.Services;
-using System.Reflection;
-
+﻿using FitnessApp.Models;
+using FitnessApp.Services;
+using Microsoft.Maui.Storage;
+using SkiaSharp.Views.Maui.Controls.Hosting;
 namespace FitnessApp
 {
     public partial class App : Application
@@ -15,11 +14,12 @@ namespace FitnessApp
             {
                 await FoodDatabase.InitializeAsync();
             });
-        }
-
-        protected override Window CreateWindow(IActivationState? activationState)
-        {
-            return new Window(new AppShell());
+            var builder = MauiApp.CreateBuilder();
+            builder
+                .UseMauiApp<App>()
+                .UseSkiaSharp();
+            // Always use AppShell, it will handle the initial navigation
+            MainPage = new AppShell();
         }
     }
 }
