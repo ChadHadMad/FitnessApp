@@ -67,7 +67,7 @@ namespace FitnessApp.Pages
             };
 
             await WorkoutLogService.AddLoggedWorkoutAsync(DateTime.Today.ToString("yyyy-MM-dd"), entry);
-            await WorkoutCsvService.AppendAsync(entry); // <- append to CSV
+            await WorkoutCsvService.AppendAsync(entry); 
 
             todayLog.Workouts.Add(entry);
             RefreshLoggedListAndTotals();
@@ -98,7 +98,7 @@ namespace FitnessApp.Pages
             };
 
             await WorkoutLogService.AddLoggedWorkoutAsync(DateTime.Today.ToString("yyyy-MM-dd"), entry);
-            await WorkoutCsvService.AppendAsync(entry); // <- append to CSV
+            await WorkoutCsvService.AppendAsync(entry); 
 
             if (!recommendedWorkouts.Any(w => w.Name.Equals(entry.Name, StringComparison.OrdinalIgnoreCase)))
                 recommendedWorkouts.Add(new WorkoutItem { Name = entry.Name, CaloriesPerMinute = cpm });

@@ -15,7 +15,6 @@
                    FontAttributes="Bold"
                    HorizontalOptions="Center" />
 
-            <!-- existing stats -->
             <Label Text="Weight" FontAttributes="Bold" FontSize="20" />
             <ProgressBar x:Name="WeightProgressBar" Progress="0" HeightRequest="20"/>
             <Label x:Name="WeightLabel" Text="-- kg" FontSize="18" />

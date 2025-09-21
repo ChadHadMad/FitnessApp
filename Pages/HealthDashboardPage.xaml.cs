@@ -1,24 +1,23 @@
-﻿using FitnessApp.Models;
-using FitnessApp.Services;
+﻿using FitnessApp.Services;
 using LiveChartsCore;
 using LiveChartsCore.SkiaSharpView;
-using LiveChartsCore.SkiaSharpView.Painting;
+using Microsoft.Maui.ApplicationModel;
 using System.Collections.ObjectModel;
 
 namespace FitnessApp.Pages
 {
     public partial class HealthDashboardPage : ContentPage
     {
-        public ObservableCollection<ISeries> WeeklyCaloriesSeries { get; set; }
-        public Axis[] XAxes { get; set; }
+        public ObservableCollection<ISeries> WeeklyCaloriesSeries { get; set; } = new();
+        public Axis[] XAxes { get; set; } = new Axis[] { new Axis { Labels = new List<string>() } };
+
+        private bool _listening;  
 
         public HealthDashboardPage()
         {
             InitializeComponent();
-
-            WeeklyCaloriesSeries = new ObservableCollection<ISeries>();
-            XAxes = new Axis[] { new Axis { Labels = new List<string>() } };
-
+            FoodLogService.LogChanged += OnAnyLogChanged;
+            WorkoutLogService.LogChanged += OnAnyLogChanged;
             WeeklyCaloriesChart.Series = WeeklyCaloriesSeries;
             WeeklyCaloriesChart.XAxes = XAxes;
         }
@@ -27,13 +26,42 @@ namespace FitnessApp.Pages
         {
             base.OnAppearing();
 
+            if (!_listening)
+            {
+                FoodLogService.LogChanged += OnAnyLogChanged;
+                WorkoutLogService.LogChanged += OnAnyLogChanged;
+                _listening = true;
+            }
+
             await FoodLogService.EnsureDailyResetAsync();
+            await WorkoutLogService.EnsureDailyResetAsync();
 
             await LoadDashboardData();
             await LoadWeeklyCaloriesChart();
             await LoadMonthlyCaloriesChart();
-
             await RefreshCaloriesConsistencyPieAsync();
+        }
+
+        protected override void OnDisappearing()
+        {
+            base.OnDisappearing();
+            if (_listening)
+            {
+                FoodLogService.LogChanged -= OnAnyLogChanged;
+                WorkoutLogService.LogChanged -= OnAnyLogChanged;
+                _listening = false;
+            }
+        }
+
+        private async void OnAnyLogChanged()
+        {
+            await MainThread.InvokeOnMainThreadAsync(async () =>
+            {
+                await LoadDashboardData();
+                await LoadWeeklyCaloriesChart();
+                await LoadMonthlyCaloriesChart();
+                await RefreshCaloriesConsistencyPieAsync();
+            });
         }
 
         private async Task LoadDashboardData()
@@ -72,6 +100,9 @@ namespace FitnessApp.Pages
             if (profile.TargetWeightKg > 0 && Math.Abs(profile.TargetWeightKg - profile.WeightKg) >= 1)
                 dailyCalories += profile.TargetWeightKg > profile.WeightKg ? 500 : -500;
 
+            double caloriesBurnedToday = Preferences.Get("CaloriesBurnedToday", 0.0);
+            dailyCalories += caloriesBurnedToday;
+
             CaloriesLabel.Text = $"{dailyCalories:F0} kcal";
 
             double proteinNeeded = profile.WeightKg * 1.6;
@@ -84,11 +115,11 @@ namespace FitnessApp.Pages
             var values = logs.Select(l => (double)l.Foods.Sum(f => f.TotalCalories)).ToArray();
             var labels = logs.Select(l => l.Date.ToString("ddd")).ToArray();
 
-            if (values.Length == 0) { values = new double[] { 0 }; labels = new[] { "—" }; }
+            if (values.Length == 0) { values = new[] { 0d }; labels = new[] { "—" }; }
 
             WeeklyCaloriesChart.Series = new ISeries[]
             {
-            new ColumnSeries<double> { Values = values }
+                new ColumnSeries<double> { Values = values }
             };
             WeeklyCaloriesChart.XAxes = new[] { new Axis { Labels = labels } };
         }
@@ -99,37 +130,38 @@ namespace FitnessApp.Pages
             var values = logs.Select(l => (double)l.Foods.Sum(f => f.TotalCalories)).ToArray();
             var labels = logs.Select(l => l.Date.ToString("dd MMM")).ToArray();
 
-            if (values.Length == 0) { values = new double[] { 0 }; labels = new[] { "—" }; }
+            if (values.Length == 0) { values = new[] { 0d }; labels = new[] { "—" }; }
 
             MonthlyCaloriesChart.Series = new ISeries[]
             {
-            new LineSeries<double> { Values = values }
+                new LineSeries<double> { Values = values }
             };
             MonthlyCaloriesChart.XAxes = new[] { new Axis { Labels = labels } };
         }
 
         private async Task RefreshCaloriesConsistencyPieAsync()
         {
-            var stats = await StatisticsService.GetStatsAsync(days: 7); // or 30
+            var stats = await StatisticsService.GetStatsAsync(days: 7);
 
             ConsistencyPieChart.Series = new ISeries[]
             {
-            new PieSeries<double>
-            {
-                Values = new[] { stats.ConsistencyPercent },
-                Name = "On Track",
-                DataLabelsSize = 14,
-                DataLabelsPosition = LiveChartsCore.Measure.PolarLabelsPosition.Middle
-            },
-            new PieSeries<double>
-            {
-                Values = new[] { 100 - stats.ConsistencyPercent },
-                Name = "Missed",
-                DataLabelsSize = 14,
-                DataLabelsPosition = LiveChartsCore.Measure.PolarLabelsPosition.Middle
-            }
+                new PieSeries<double>
+                {
+                    Values = new[] { stats.ConsistencyPercent },
+                    Name = "On Track",
+                    DataLabelsSize = 14,
+                    DataLabelsPosition = LiveChartsCore.Measure.PolarLabelsPosition.Middle
+                },
+                new PieSeries<double>
+                {
+                    Values = new[] { 100 - stats.ConsistencyPercent },
+                    Name = "Missed",
+                    DataLabelsSize = 14,
+                    DataLabelsPosition = LiveChartsCore.Measure.PolarLabelsPosition.Middle
+                }
             };
         }
+
         private async void OnEditProfileClicked(object sender, EventArgs e)
             => await Shell.Current.GoToAsync("UserProfilePage");
     }

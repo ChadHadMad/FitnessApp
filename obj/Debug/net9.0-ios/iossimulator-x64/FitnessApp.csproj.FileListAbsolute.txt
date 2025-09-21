@@ -322,10 +322,6 @@ C:\Users\Sebastian M\Desktop\FitnessApp\FitnessApp\bin\Debug\net9.0-ios\iossimul
 C:\Users\Sebastian M\Desktop\FitnessApp\FitnessApp\bin\Debug\net9.0-ios\iossimulator-x64\libxamarin-dotnet-nativeaot.a
 C:\Users\Sebastian M\Desktop\FitnessApp\FitnessApp\bin\Debug\net9.0-ios\iossimulator-x64\libxamarin-dotnet.a
 C:\Users\Sebastian M\Desktop\FitnessApp\FitnessApp\bin\Debug\net9.0-ios\iossimulator-x64\libxamarin-dotnet.dylib
-C:\Users\Sebastian M\Desktop\FitnessApp\FitnessApp\bin\Debug\net9.0-ios\iossimulator-x64\Microsoft.Maui.Controls.HotReload.Forms.dll
-C:\Users\Sebastian M\Desktop\FitnessApp\FitnessApp\bin\Debug\net9.0-ios\iossimulator-x64\Microsoft.VisualStudio.DesignTools.MobileTapContracts.dll
-C:\Users\Sebastian M\Desktop\FitnessApp\FitnessApp\bin\Debug\net9.0-ios\iossimulator-x64\Microsoft.VisualStudio.DesignTools.TapContract.dll
-C:\Users\Sebastian M\Desktop\FitnessApp\FitnessApp\bin\Debug\net9.0-ios\iossimulator-x64\Microsoft.VisualStudio.DesignTools.XamlTapContract.dll
 C:\Users\Sebastian M\Desktop\FitnessApp\FitnessApp\obj\Debug\net9.0-ios\iossimulator-x64\XamlC.stamp
 C:\Users\Sebastian M\Desktop\FitnessApp\FitnessApp\obj\Debug\net9.0-ios\iossimulator-x64\FitnessApp.csproj.Up2Date
 C:\Users\Sebastian M\Desktop\FitnessApp\FitnessApp\obj\Debug\net9.0-ios\iossimulator-x64\FitnessApp.dll
@@ -333,4 +329,3 @@ C:\Users\Sebastian M\Desktop\FitnessApp\FitnessApp\obj\Debug\net9.0-ios\iossimul
 C:\Users\Sebastian M\Desktop\FitnessApp\FitnessApp\obj\Debug\net9.0-ios\iossimulator-x64\FitnessApp.pdb
 C:\Users\Sebastian M\Desktop\FitnessApp\FitnessApp\obj\Debug\net9.0-ios\iossimulator-x64\FitnessApp.genruntimeconfig.cache
 C:\Users\Sebastian M\Desktop\FitnessApp\FitnessApp\obj\Debug\net9.0-ios\iossimulator-x64\ref\FitnessApp.dll
-C:\Users\Sebastian M\Desktop\FitnessApp\FitnessApp\obj\Debug\net9.0-ios\iossimulator-x64\build-signature\signature

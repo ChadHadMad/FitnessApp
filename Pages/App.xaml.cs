@@ -18,7 +18,6 @@ namespace FitnessApp
             builder
                 .UseMauiApp<App>()
                 .UseSkiaSharp();
-            // Always use AppShell, it will handle the initial navigation
             MainPage = new AppShell();
         }
     }

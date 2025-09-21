@@ -478,10 +478,6 @@ C:\Users\Sebastian M\Desktop\FitnessApp\FitnessApp\obj\Debug\net9.0-windows10.0.
 C:\Users\Sebastian M\Desktop\FitnessApp\FitnessApp\obj\Debug\net9.0-windows10.0.19041.0\win10-x64\MultipleQualifiersPerDimensionFound.txt
 C:\Users\Sebastian M\Desktop\FitnessApp\FitnessApp\bin\Debug\net9.0-windows10.0.19041.0\win10-x64\CsvHelper.dll
 C:\Users\Sebastian M\Desktop\FitnessApp\FitnessApp\bin\Debug\net9.0-windows10.0.19041.0\win10-x64\CommunityToolkit.Mvvm.dll
-C:\Users\Sebastian M\Desktop\FitnessApp\FitnessApp\bin\Debug\net9.0-windows10.0.19041.0\win10-x64\Microsoft.Maui.Controls.HotReload.Forms.dll
-C:\Users\Sebastian M\Desktop\FitnessApp\FitnessApp\bin\Debug\net9.0-windows10.0.19041.0\win10-x64\Microsoft.VisualStudio.DesignTools.MobileTapContracts.dll
-C:\Users\Sebastian M\Desktop\FitnessApp\FitnessApp\bin\Debug\net9.0-windows10.0.19041.0\win10-x64\Microsoft.VisualStudio.DesignTools.TapContract.dll
-C:\Users\Sebastian M\Desktop\FitnessApp\FitnessApp\bin\Debug\net9.0-windows10.0.19041.0\win10-x64\Microsoft.VisualStudio.DesignTools.XamlTapContract.dll
 C:\Users\Sebastian M\Desktop\FitnessApp\FitnessApp\bin\Debug\net9.0-windows10.0.19041.0\win10-x64\splashSplashScreen.scale-100.png
 C:\Users\Sebastian M\Desktop\FitnessApp\FitnessApp\bin\Debug\net9.0-windows10.0.19041.0\win10-x64\splashSplashScreen.scale-125.png
 C:\Users\Sebastian M\Desktop\FitnessApp\FitnessApp\bin\Debug\net9.0-windows10.0.19041.0\win10-x64\splashSplashScreen.scale-150.png

@@ -1,12 +1,13 @@
 ﻿using FitnessApp.Models;
-using Microsoft.Maui.Storage;
 using FitnessApp.Services;
+using Microsoft.Maui.Storage;
+using System.Collections.ObjectModel;
 
 namespace FitnessApp.Pages
 {
     public partial class CalorieIntakePage : ContentPage
     {
-        private List<FoodItem> filteredFoods = new();
+        private ObservableCollection<FoodItem> filteredFoods = new();
         private List<FoodItem> eatenFoods = new();
 
         private double dailyCalorieNeed;
@@ -91,17 +92,19 @@ namespace FitnessApp.Pages
 
         private void LoadFoodList()
         {
-            filteredFoods = FoodDatabase.Foods.ToList();
+            filteredFoods = new ObservableCollection<FoodItem>(FoodDatabase.Foods);
             FoodListView.ItemsSource = filteredFoods;
         }
 
         private void OnFoodSearchChanged(object sender, TextChangedEventArgs e)
         {
-            string query = e.NewTextValue?.ToLower() ?? "";
-            filteredFoods = FoodDatabase.Foods
-                .Where(f => f.Name.ToLower().Contains(query))
-                .ToList();
-            FoodListView.ItemsSource = filteredFoods;
+            var query = e.NewTextValue?.Trim() ?? string.Empty;
+            var matches = string.IsNullOrEmpty(query)
+                ? FoodDatabase.Foods
+                : FoodDatabase.Foods.Where(f => f.Name.Contains(query, StringComparison.OrdinalIgnoreCase));
+
+            filteredFoods.Clear();
+            foreach (var f in matches) filteredFoods.Add(f);
         }
 
         private void OnFoodSelected(object sender, SelectionChangedEventArgs e)
@@ -225,21 +228,23 @@ namespace FitnessApp.Pages
         private async void OnAddCustomFoodClicked(object sender, EventArgs e)
         {
             if (string.IsNullOrWhiteSpace(CustomFoodName.Text) ||
-                !double.TryParse(CustomFoodCalories.Text, out double kcal) ||
-                !double.TryParse(CustomFoodProtein.Text, out double protein))
+         !double.TryParse(CustomFoodCalories.Text, out double kcal) ||
+         !double.TryParse(CustomFoodProtein.Text, out double protein))
             {
                 await DisplayAlert("Error", "Enter valid name, kcal/100g, and protein/100g.", "OK");
                 return;
             }
 
-            FoodDatabase.AddFood(CustomFoodName.Text, kcal, protein);
-
-            await FoodCsvService.AppendCustomAsync(new FoodItem
+            var newItem = new FoodItem
             {
                 Name = CustomFoodName.Text.Trim(),
                 CaloriesPer100g = kcal,
                 ProteinPer100g = protein
-            });
+            };
+
+            FoodDatabase.Foods.Add(newItem);
+
+            filteredFoods.Insert(0, newItem); 
 
             CustomFoodName.Text = "";
             CustomFoodCalories.Text = "";

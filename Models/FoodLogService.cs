@@ -13,6 +13,8 @@ namespace FitnessApp.Services
     {
         private const string LogsKey = "DailyLogs";
 
+        public static event Action? LogChanged;
+
         public static Task<List<DailyLog>> LoadLogAsync()
         {
             if (!Preferences.ContainsKey(LogsKey))
@@ -31,6 +33,13 @@ namespace FitnessApp.Services
             logs.RemoveAll(l => l.Date.Date == logForDay.Date.Date);
             logs.Add(logForDay);
             Preferences.Set(LogsKey, JsonSerializer.Serialize(logs));
+
+            var cutoff = DateTime.Today.AddDays(-60);
+            logs = logs.Where(l => l.Date.Date >= cutoff).OrderBy(l => l.Date).ToList();
+
+            Preferences.Set(LogsKey, JsonSerializer.Serialize(logs)); 
+
+            LogChanged?.Invoke();
         }
 
         public static async Task<DailyLog> GetTodayAsync()
@@ -42,6 +51,8 @@ namespace FitnessApp.Services
                 today = new DailyLog { Date = DateTime.Today, Foods = new List<FoodItem>(), Calories = 0, Protein = 0 };
                 logs.Add(today);
                 Preferences.Set(LogsKey, JsonSerializer.Serialize(logs));
+
+                LogChanged?.Invoke();
             }
             return today;
         }

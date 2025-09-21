@@ -12,6 +12,7 @@
       }
     ],
     "configProperties": {
+      "MVVMTOOLKIT_ENABLE_INOTIFYPROPERTYCHANGING_SUPPORT": true,
       "Microsoft.Extensions.DependencyInjection.VerifyOpenGenericServiceTrimmability": false,
       "System.ComponentModel.DefaultValueAttribute.IsSupported": true,
       "System.ComponentModel.Design.IDesignerHost.IsSupported": false,

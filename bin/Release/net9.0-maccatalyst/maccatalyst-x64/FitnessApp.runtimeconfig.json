@@ -12,6 +12,7 @@
       }
     ],
     "configProperties": {
+      "MVVMTOOLKIT_ENABLE_INOTIFYPROPERTYCHANGING_SUPPORT": true,
       "Microsoft.Extensions.DependencyInjection.VerifyOpenGenericServiceTrimmability": false,
       "System.AggressiveAttributeTrimming": true,
       "System.ComponentModel.TypeConverter.EnableUnsafeBinaryFormatterInDesigntimeLicenseContextSerialization": false,
